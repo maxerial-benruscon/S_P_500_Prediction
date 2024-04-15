@@ -22,7 +22,7 @@ yf.pdr_override()
 def download_stock_data(tech_list):
     # Set up End and Start times for data grab
     end = datetime.now()
-    start = datetime(end.year - 10, end.month, end.day)
+    start = datetime(end.year - 1, end.month, end.day)
 
     company_list = []
     company_name = []

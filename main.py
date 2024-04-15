@@ -10,21 +10,22 @@ if __name__ == '__main__':
     #convert to pandas dataframe
     model = ReferenceModel(input_shape=(x_train.shape[1], 1))
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.train(x_train, y_train, batch_size=10, epochs=1, validation_data=(x_test, y_test))
+    model.train(x_train, y_train, batch_size=1, epochs=1, validation_data=(x_test, y_test))
     
     predictions = model.predict(x_test)
     predictions = scaler.inverse_transform(predictions)
 
     # Get the root mean squared error (RMSE)
-    train_rmse = mrmse = np.sqrt(np.mean(((predictions - y_train) ** 2)))
-    test_rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
+
+
+    # Get the root mean squared error (RMSE)
+    rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
     
-    print('Train RMSE:', train_rmse)
-    print('Test RMSE:', test_rmse)
+    print('Train RMSE:', rmse)
     
     DeepModel = DeepModel(input_shape=(x_train.shape[1], 1))
     DeepModel.compile(optimizer='adam', loss='mean_squared_error')
-    DeepModel.train(x_train, y_train, batch_size=10, epochs=1, validation_data=(x_test, y_test))
+    DeepModel.train(x_train, y_train, batch_size=1, epochs=1)
     
     predictions = DeepModel.predict(x_test)
     predictions = scaler.inverse_transform(predictions)
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     
     CNNModel = CNNModel(input_shape=(x_train.shape[1], 1))
     CNNModel.compile(optimizer='adam', loss='mean_squared_error')
-    CNNModel.train(x_train, y_train, batch_size=10, epochs=1, validation_data=(x_test, y_test))
+    CNNModel.train(x_train, y_train, batch_size=1, epochs=1)
     
     predictions = CNNModel.predict(x_test)
     predictions = scaler.inverse_transform(predictions)
