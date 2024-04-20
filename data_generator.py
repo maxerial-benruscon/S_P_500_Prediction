@@ -1,44 +1,39 @@
-#refactoring of https://www.kaggle.com/code/faressayah/stock-market-analysis-prediction-using-lstm
-
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
-sns.set_style('whitegrid')
-plt.style.use("fivethirtyeight")
-
-
-# For reading stock data from yahoo
-from pandas_datareader.data import DataReader
 import yfinance as yf
-from pandas_datareader import data as pdr
+from datetime import datetime
 
-yf.pdr_override()
+def rsi_calculation(series, periods=14, shift=1):
+    delta = series.diff()
+    #shift ensures that there occurs no data leakage
+    gain = (delta.where(delta > 0, 0)).rolling(window=periods).mean().shift(shift)
+    loss = (-delta.where(delta < 0, 0)).rolling(window=periods).mean().shift(shift)
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
 
-
-
-
-def download_stock_data(tech_list):
-    # Set up End and Start times for data grab
+def download_stock_df(tech_list):
     end = datetime.now()
-    start = datetime(1990, 1, 1)
+    start = datetime(end.year - 20, end.month, end.day)
 
     company_list = []
-    company_name = []
 
     for stock in tech_list:
-        globals()[stock] = yf.download(stock, start, end)
-        company_list.append(globals()[stock])
-        company_name.append(stock)
+        df = yf.download(stock, start, end)
+        df['Symbol'] = stock  # Ensure 'Symbol' is a column
+        company_list.append(df)
 
-    for company, com_name in zip(company_list, company_name):
-        company["company_name"] = com_name
+    # Concatenate with Symbol as part of the index if that is the intended structure
+    df = pd.concat(company_list)
+    
+    
+    for window in [3, 7, 14, 21, 28]:
+        df[f'{window}ma'] = df.groupby('Symbol')['Close'].transform(lambda x: x.shift(1).rolling(window).mean())
 
-    df = pd.concat(company_list, axis=0)
-    print(df.info())
-    #print unique company names
-    print(df['company_name'].unique())
+    # Calculate RSI for each group and ensure the index aligns correctly
+    df['RSI_14'] = df.groupby('Symbol')['Close'].transform(lambda x: rsi_calculation(x, 14, 1))
+    df['RSI_no_shift'] = df.groupby('Symbol')['Close'].transform(lambda x: rsi_calculation(x, 14, 0)) #only to ensure that the shift is working correctly
+
+    df.sort_values(by=['Date'], inplace=True)
     return df
 
-download_stock_data(['AAPL', 'GOOGL', 'MSFT', 'AMZN'])
+

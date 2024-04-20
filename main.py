@@ -1,47 +1,29 @@
-from data_generator import download_stock_data
-from pipeline import preprocess_data
-from models import ReferenceModel, DeepModel, CNNModel
-import numpy as np
-import pandas as pd
+from data_generator import download_stock_df, rsi_calculation
+from pipeline import pipeline
+from models import model_Ridge
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 if __name__ == '__main__':
-    df = download_stock_data(['AAPL', 'GOOGL', 'MSFT', 'AMZN'])
-    x_train, y_train, x_test, y_test, scaler = preprocess_data(df)
-    #convert to pandas dataframe
-    model = ReferenceModel(input_shape=(x_train.shape[1], 1))
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.train(x_train, y_train, batch_size=1, epochs=1, validation_data=(x_test, y_test))
     
-    predictions = model.predict(x_test)
-    predictions = scaler.inverse_transform(predictions)
+    tech_stocks = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'NVDA', 'INTC', 'AMD', 'QCOM', 'IBM']
+    df = download_stock_df(tech_stocks)
 
-    # Get the root mean squared error (RMSE)
+    
+    X_train, y_train, X_valid, y_valid, X_test, y_test = pipeline(df)
+    
+    model_Ridge.fit(X_train, y_train)
+    
+    print("Ridge regression model score on training set: ", model_Ridge.score(X_train, y_train))
+    print("Ridge regression model score on validation set: ", model_Ridge.score(X_valid, y_valid))
+    print("Ridge regression model score on test set: ", model_Ridge.score(X_test, y_test))
+    
+    #mae
+    print("Mean absolute error on training set: ", mean_absolute_error(y_train, model_Ridge.predict(X_train)))
+    print("Mean absolute error on validation set: ", mean_absolute_error(y_valid, model_Ridge.predict(X_valid)))
+    print("Mean absolute error on test set: ", mean_absolute_error(y_test, model_Ridge.predict(X_test)))
+    
+    
 
-
-    # Get the root mean squared error (RMSE)
-    rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
-    
-    print('Train RMSE:', rmse)
-    
-    DeepModel = DeepModel(input_shape=(x_train.shape[1], 1))
-    DeepModel.compile(optimizer='adam', loss='mean_squared_error')
-    DeepModel.train(x_train, y_train, batch_size=1, epochs=1)
-    
-    predictions = DeepModel.predict(x_test)
-    predictions = scaler.inverse_transform(predictions)
-    
-    train_rmse = np.sqrt(np.mean(((predictions - y_train) ** 2)))
-    test_rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
-    
-    CNNModel = CNNModel(input_shape=(x_train.shape[1], 1))
-    CNNModel.compile(optimizer='adam', loss='mean_squared_error')
-    CNNModel.train(x_train, y_train, batch_size=1, epochs=1)
-    
-    predictions = CNNModel.predict(x_test)
-    predictions = scaler.inverse_transform(predictions)
-    
-    train_rmse = np.sqrt(np.mean(((predictions - y_train) ** 2)))
-    test_rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
     
     
     
