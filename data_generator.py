@@ -22,7 +22,7 @@ yf.pdr_override()
 def download_stock_data(tech_list):
     # Set up End and Start times for data grab
     end = datetime.now()
-    start = datetime(end.year - 1, end.month, end.day)
+    start = datetime(1990, 1, 1)
 
     company_list = []
     company_name = []
@@ -41,4 +41,4 @@ def download_stock_data(tech_list):
     print(df['company_name'].unique())
     return df
 
-#download_stock_data(['AAPL', 'GOOGL', 'MSFT', 'AMZN'])
+download_stock_data(['AAPL', 'GOOGL', 'MSFT', 'AMZN'])
