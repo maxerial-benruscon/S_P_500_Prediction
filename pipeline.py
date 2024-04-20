@@ -24,7 +24,7 @@ def pipeline(df):
     X_valid_scaled = scaler.transform(X_valid)
     X_test_scaled = scaler.transform(X_test)
     
-    return X_train_scaled, y_train, X_valid_scaled, y_valid, X_test_scaled, y_test
+    return X_train_scaled, y_train, X_valid_scaled, y_valid, X_test_scaled, y_test, df_train, df_valid, df_test
 
 
 

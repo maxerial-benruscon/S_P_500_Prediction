@@ -12,7 +12,7 @@ def rsi_calculation(series, periods=14, shift=1):
     return rsi
 
 def download_stock_df(tech_list):
-    end = datetime.now()
+    end = datetime.strptime('2023-01-01', '%Y-%m-%d')
     start = datetime(end.year - 20, end.month, end.day)
 
     company_list = []
