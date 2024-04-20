@@ -1,4 +1,4 @@
-from data_generator import download_stock_df, rsi_calculation
+from data_generator import download_stock_df
 from pipeline import pipeline
 from models import model_LinearRegression, RNNModel
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     X_valid = X_valid.reshape(X_valid.shape[0], X_valid.shape[1], 1)
     X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
     
-    RNNModel.model.fit(X_train, y_train, epochs=2, batch_size=32, validation_data=(X_valid, y_valid))
+    RNNModel.model.fit(X_train, y_train, epochs=100, batch_size=8, validation_data=(X_valid, y_valid))
     
     y_pred_train = RNNModel.model.predict(X_train)
     y_pred_valid = RNNModel.model.predict(X_valid)
