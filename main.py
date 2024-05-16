@@ -110,7 +110,7 @@ if __name__ == '__main__':
     X_valid = X_valid.reshape(X_valid.shape[0], X_valid.shape[1], 1)
     X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
     
-    history = RNNModel.model.fit(X_train, y_train, epochs=10, batch_size=8, validation_data=(X_valid, y_valid))
+    history = RNNModel.model.fit(X_train, y_train, epochs=1, batch_size=8, validation_data=(X_valid, y_valid))
     
     y_pred_train = RNNModel.model.predict(X_train)
     y_pred_valid = RNNModel.model.predict(X_valid)
@@ -131,8 +131,3 @@ if __name__ == '__main__':
     print("Mean absolute error on validation set: ", mean_absolute_error(y_valid, y_pred_valid))
     print("Mean absolute error on test set: ", mean_absolute_error(y_test, y_pred_test))
     
-    #plotting the loss
-    plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='validation')
-    plt.legend()
-    plt.show()
