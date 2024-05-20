@@ -1,6 +1,6 @@
 import os
 from feature_generation import prepare_features, combine_stocks, ml_preprocessing
-from models import RNNModel
+from models import RNNModel, CNNModel
 from ploting import plot_data
 from sklearn.metrics import mean_absolute_error
 from sklearn.ensemble import RandomForestRegressor
@@ -52,14 +52,7 @@ df = pd.concat([df, pd.DataFrame({'Model': ['Linear Regression'], 'MAE_train': [
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AAPL', model='Linear Regression')
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='GOOGL', model='Linear Regression')
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='MSFT', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AMZN', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='TSLA', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='NVDA', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='INTC', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AMD', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='QCOM', model='Linear Regression')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='IBM', model='Linear Regression')
-print("Done")
+
 
 # SHAP for Linear Regression
 explainer_lr = shap.Explainer(model_LinearRegression, X_train_scaled)
@@ -102,7 +95,6 @@ plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, 
 #df
 df = pd.concat([df, pd.DataFrame({'Model': ['XGBoost'], 'MAE_train': [mean_absolute_error(y_train, y_pred_train)], 'MAE_valid': [mean_absolute_error(y_valid, y_pred_valid)], 'MAE_test': [mean_absolute_error(y_test, y_pred_test)]})], ignore_index=True)
 
-print(df)
 
 
 
@@ -112,8 +104,10 @@ X_valid_np = X_valid_scaled.to_numpy().reshape(X_valid_scaled.shape[0], X_valid_
 X_test_np = X_test_scaled.to_numpy().reshape(X_test_scaled.shape[0], X_test_scaled.shape[1], 1)
 
 RNNModel = RNNModel(X_train_scaled.shape[1])
+#compile model
+RNNModel.model.compile(optimizer='adam', loss='mean_absolute_error')
 
-history = RNNModel.model.fit(X_train_np, y_train, epochs=1, batch_size=8, validation_data=(X_valid_np, y_valid))
+history = RNNModel.model.fit(X_train_np, y_train, epochs=100, batch_size=1280, validation_data=(X_valid_np, y_valid))
 
 y_pred_train = RNNModel.model.predict(X_train_scaled)
 y_pred_valid = RNNModel.model.predict(X_valid_scaled)
@@ -122,10 +116,6 @@ y_pred_test = RNNModel.model.predict(X_test_scaled)
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AAPL', model='RNN')
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='GOOGL', model='RNN')
 plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='MSFT', model='RNN')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AMZN', model='RNN')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='TSLA', model='RNN')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='NVDA', model='RNN')
-plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='INTC', model='RNN')
 
 
 
@@ -141,4 +131,32 @@ df = pd.concat([df, pd.DataFrame({'Model': ['RNN'], 'MAE_train': [mean_absolute_
 pd.DataFrame(history.history).to_csv('history.csv')
 
 #plot history
-plt.plot(history.history['loss'])
+history = pd.read_csv('history.csv')
+plt.plot(history['loss'], label='train')
+plt.plot(history['val_loss'], label='validation')
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend()
+plt.savefig('plots/histories/history_loss_rnn.png')
+plt.close()
+
+plt.plot(history['mae'], label='train')
+plt.plot(history['val_mae'], label='validation')
+#title
+plt.title('model mae')
+plt.ylabel('mae')
+plt.xlabel('epoch')
+plt.legend()
+plt.savefig('plots/histories/history_mae_rnn.png')
+
+print(df)
+#plot model comparison
+plt.figure(figsize=(10, 5))
+plt.bar(df['Model'], df['MAE_train'], label='MAE_train')
+plt.bar(df['Model'], df['MAE_valid'], label='MAE_valid')
+plt.bar(df['Model'], df['MAE_test'], label='MAE_test')
+plt.title('Model Comparison')
+plt.ylabel('MAE')
+plt.legend()
+plt.savefig('plots/results/model_comparison.png')
