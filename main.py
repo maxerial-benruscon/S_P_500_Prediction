@@ -4,7 +4,7 @@ import shap
 import matplotlib.pyplot as plt
 from feature_generation import prepare_features, combine_stocks, ml_preprocessing
 from models import RNNModel, CNNModel
-from ploting import plot_data
+from ploting import plot_data, plot_model_history
 from sklearn.metrics import mean_absolute_error
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -44,11 +44,6 @@ def save_shap_plots(model, X_train, model_name):
     plt.savefig(f'plots/explainer/{model_name.lower()}_summary_plot.png', bbox_inches='tight')
     plt.close()
 
-    print(f"SHAP force plot for a single prediction - {model_name}")
-    shap.force_plot(explainer.expected_value, shap_values[0].values, X_train.iloc[0], show=False)
-    plt.savefig(f'plots/explainer/{model_name.lower()}_force_plot.png', bbox_inches='tight')
-    plt.close()
-
     print(f"SHAP waterfall plot for a single prediction - {model_name}")
     shap.waterfall_plot(shap_values[0], show=False)
     plt.savefig(f'plots/explainer/{model_name.lower()}_waterfall_plot.png', bbox_inches='tight')
@@ -57,9 +52,11 @@ def save_shap_plots(model, X_train, model_name):
 def reshape_for_rnn(X):
     return X.to_numpy().reshape(X.shape[0], X.shape[1], 1)
 
+
+
 def main():
     model_LinearRegression = LinearRegression()
-    model_RandomForest = RandomForestRegressor()
+
     model_XGB = XGBRegressor(n_estimators=10, learning_rate=0.05, n_jobs=-1, random_state=0)
 
     df = pd.DataFrame(columns=['Model', 'MAE_train', 'MAE_valid', 'MAE_test'])
@@ -90,7 +87,7 @@ def main():
     X_test_np = reshape_for_rnn(X_test_scaled)
 
     rnn_model = RNNModel(X_train_scaled.shape[1])
-    history = rnn_model.model.fit(X_train_np, y_train, epochs=1, batch_size=5120, validation_data=(X_valid_np, y_valid))
+    rnn_history = rnn_model.model.fit(X_train_np, y_train, epochs=1, batch_size=5120, validation_data=(X_valid_np, y_valid))
 
     y_pred_train = rnn_model.model.predict(X_train_scaled)
     y_pred_valid = rnn_model.model.predict(X_valid_scaled)
@@ -104,29 +101,15 @@ def main():
     mae_valid = mean_absolute_error(y_valid, y_pred_valid)
     mae_test = mean_absolute_error(y_test, y_pred_test)
     df = pd.concat([df, pd.DataFrame({'Model': ['RNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
-    pd.DataFrame(history.history).to_csv('history_rnn.csv')
+    pd.DataFrame(rnn_history.history).to_csv('history_rnn.csv')
 
-    history = pd.read_csv('history_rnn.csv')
-    plt.plot(history['loss'], label='train')
-    plt.plot(history['val_loss'], label='validation')
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend()
-    plt.savefig('plots/histories/history_loss_rnn.png')
-    plt.close()
-
-    plt.plot(history['mae'], label='train')
-    plt.plot(history['val_mae'], label='validation')
-    plt.title('model mae')
-    plt.ylabel('mae')
-    plt.xlabel('epoch')
-    plt.legend()
-    plt.savefig('plots/histories/history_mae_rnn.png')
-    plt.close()
+    rnn_history_df = pd.read_csv('history_rnn.csv')
+    plot_model_history(rnn_history_df, "RNN")
 
     # CNN
     cnn_model = CNNModel(X_train_scaled.shape[1])
+    cnn_history = cnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=1280, validation_data=(X_valid_np, y_valid))
+
     y_pred_train = cnn_model.model.predict(X_train_scaled)
     y_pred_valid = cnn_model.model.predict(X_valid_scaled)
     y_pred_test = cnn_model.model.predict(X_test_scaled)
@@ -139,28 +122,12 @@ def main():
     mae_valid = mean_absolute_error(y_valid, y_pred_valid)
     mae_test = mean_absolute_error(y_test, y_pred_test)
     df = pd.concat([df, pd.DataFrame({'Model': ['CNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
-    pd.DataFrame(history.history).to_csv('history_cnn.csv')
+    pd.DataFrame(cnn_history.history).to_csv('history_cnn.csv')
 
-    history = pd.read_csv('history_cnn.csv')
-    plt.plot(history['loss'], label='train')
-    plt.plot(history['val_loss'], label='validation')
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend()
-    plt.savefig('plots/histories/history_loss_cnn.png')
-    plt.close()
+    cnn_history_df = pd.read_csv('history_cnn.csv')
+    plot_model_history(cnn_history_df, "CNN")
 
-    plt.plot(history['mae'], label='train')
-    plt.plot(history['val_mae'], label='validation')
-    plt.title('model mae')
-    plt.ylabel('mae')
-    plt.xlabel('epoch')
-    plt.legend()
-    plt.savefig('plots/histories/history_mae_cnn.png')
-    plt.close()
 
-    print(df)
     plt.figure(figsize=(10, 5))
     plt.bar(df['Model'], df['MAE_train'], label='MAE_train')
     plt.bar(df['Model'], df['MAE_valid'], label='MAE_valid')
@@ -170,6 +137,8 @@ def main():
     plt.legend()
     plt.savefig('plots/results/model_comparison.png')
     plt.close()
+    
+    print(df)
 
 if __name__ == "__main__":
     main()

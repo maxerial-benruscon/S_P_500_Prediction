@@ -21,3 +21,21 @@ def plot_data(data_train, data_valid, data_test, y_train_pred, y_valid_pred, y_t
     fig.write_html(f'plots/{model}_prediction_{symbol}.html')
     
 
+def plot_model_history(history_df, model_name):
+    plt.plot(history_df['loss'], label='train')
+    plt.plot(history_df['val_loss'], label='validation')
+    plt.title(f'{model_name} model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend()
+    plt.savefig(f'plots/histories/history_loss_{model_name.lower()}.png')
+    plt.close()
+
+    plt.plot(history_df['mae'], label='train')
+    plt.plot(history_df['val_mae'], label='validation')
+    plt.title(f'{model_name} model mae')
+    plt.ylabel('mae')
+    plt.xlabel('epoch')
+    plt.legend()
+    plt.savefig(f'plots/histories/history_mae_{model_name.lower()}.png')
+    plt.close()

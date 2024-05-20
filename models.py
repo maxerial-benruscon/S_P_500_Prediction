@@ -1,7 +1,7 @@
 import tensorflow as tf 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Conv1D, MaxPooling1D, Flatten
-
+from tensorflow.keras.layers import BatchNormalization
 
 
 
@@ -16,8 +16,6 @@ class RNNModel:
         model.add(Dropout(0.5))
         model.add(LSTM(64, activation='tanh', return_sequences=True))
         model.add(Dropout(0.5))
-        model.add(LSTM(64, activation='tanh'))
-        model.add(Dropout(0.5))
         model.add(Dense(60, activation='tanh'))
         model.add(Dense(1))
 
@@ -26,15 +24,32 @@ class RNNModel:
 
 
 class CNNModel:
-    def __init__(self, shape):
-        self.shape = shape
+    def __init__(self, input_shape):
+        self.input_shape = input_shape
         self.model = self.build_model()
 
     def build_model(self):
         model = Sequential()
-        model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(self.shape, 1)))
+
+        model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(self.input_shape, 1)))
+        model.add(BatchNormalization())
         model.add(MaxPooling1D(pool_size=2))
+        model.add(Dropout(0.2))
+        
+        model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling1D(pool_size=2))
+        model.add(Dropout(0.2))
+        
+        model.add(Conv1D(filters=256, kernel_size=3, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling1D(pool_size=2))
+        model.add(Dropout(0.2))
+        
+        # Flatten and Dense layers
         model.add(Flatten())
+        model.add(Dense(100, activation='relu'))
+        model.add(Dropout(0.5))
         model.add(Dense(50, activation='relu'))
         model.add(Dense(1))
 
