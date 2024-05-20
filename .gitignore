@@ -5,6 +5,5 @@ final_data.csv
 *.html
 *.png
 data/stock_dataframes/
-plots/
 
 data/ML_data/combined_dataframe.csv

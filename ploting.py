@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
 def plot_data(data_train, data_valid, data_test, y_train_pred, y_valid_pred, y_test_pred, symbol='AAPL', model='Linear Regression'):
     # Create 'plots' directory if it doesn't exist
