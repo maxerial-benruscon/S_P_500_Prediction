@@ -56,8 +56,7 @@ def reshape_for_rnn(X):
 
 def main():
     model_LinearRegression = LinearRegression()
-
-    model_XGB = XGBRegressor(n_estimators=10, learning_rate=0.05, n_jobs=-1, random_state=0)
+    model_XGB = XGBRegressor(n_estimators=10000, learning_rate=0.01, n_jobs=-1, random_state=187)
 
     df = pd.DataFrame(columns=['Model', 'MAE_train', 'MAE_valid', 'MAE_test'])
 
@@ -100,6 +99,8 @@ def main():
     mae_train = mean_absolute_error(y_train, y_pred_train)
     mae_valid = mean_absolute_error(y_valid, y_pred_valid)
     mae_test = mean_absolute_error(y_test, y_pred_test)
+    
+    save_shap_plots(rnn_model.model, X_train_np, "RNN")
     df = pd.concat([df, pd.DataFrame({'Model': ['RNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
     pd.DataFrame(rnn_history.history).to_csv('history_rnn.csv')
 
@@ -121,6 +122,9 @@ def main():
     mae_train = mean_absolute_error(y_train, y_pred_train)
     mae_valid = mean_absolute_error(y_valid, y_pred_valid)
     mae_test = mean_absolute_error(y_test, y_pred_test)
+    
+    save_shap_plots(cnn_model.model, X_train_np, "CNN")
+    
     df = pd.concat([df, pd.DataFrame({'Model': ['CNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
     pd.DataFrame(cnn_history.history).to_csv('history_cnn.csv')
 
