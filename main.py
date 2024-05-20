@@ -6,9 +6,9 @@ from feature_generation import prepare_features, combine_stocks, ml_preprocessin
 from models import RNNModel, CNNModel
 from ploting import plot_data, plot_model_history
 from sklearn.metrics import mean_absolute_error
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
+import joblib
 
 def prepare_stock_data(relevant_stocks):
     for symbol in relevant_stocks:
@@ -87,7 +87,7 @@ def main():
     X_test_np = reshape_for_rnn(X_test_scaled)
 
     rnn_model = RNNModel(X_train_scaled.shape[1])
-    rnn_history = rnn_model.model.fit(X_train_np, y_train, epochs=1, batch_size=5120, validation_data=(X_valid_np, y_valid))
+    rnn_history = rnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=128, validation_data=(X_valid_np, y_valid))
 
     y_pred_train = rnn_model.model.predict(X_train_scaled)
     y_pred_valid = rnn_model.model.predict(X_valid_scaled)
@@ -108,7 +108,7 @@ def main():
 
     # CNN
     cnn_model = CNNModel(X_train_scaled.shape[1])
-    cnn_history = cnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=1280, validation_data=(X_valid_np, y_valid))
+    cnn_history = cnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=128, validation_data=(X_valid_np, y_valid))
 
     y_pred_train = cnn_model.model.predict(X_train_scaled)
     y_pred_valid = cnn_model.model.predict(X_valid_scaled)
@@ -139,6 +139,22 @@ def main():
     plt.close()
     
     print(df)
+    
+    #Save Linear Regression model
+
+    joblib.dump(model_LinearRegression, 'models/linear_regression.pkl')
+    
+    #Save XGBoost model
+    
+    joblib.dump(model_XGB, 'models/xgboost.pkl')
+    
+    #Save RNN model
+    
+    rnn_model.model.save('models/rnn_model.h5')
+    
+    #Save CNN model
+    
+    cnn_model.model.save('models/cnn_model.h5')
 
 if __name__ == "__main__":
     main()
