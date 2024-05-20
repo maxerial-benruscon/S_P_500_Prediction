@@ -1,18 +1,11 @@
 #ridge regression model
-from sklearn.linear_model import LinearRegression, LogisticRegression
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Flatten, Dropout
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
 #randome forest regressor
-from sklearn.ensemble import RandomForestRegressor
-#xgboost regressor
-from xgboost import XGBRegressor
 
 #Baseline Model
-model_LinearRegression = LinearRegression()
-model_RandomForest = RandomForestRegressor()
-model_XGB = XGBRegressor()
 
 class RNNModel:
     def __init__(self, shape):

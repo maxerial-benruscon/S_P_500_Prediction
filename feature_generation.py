@@ -3,7 +3,7 @@ import yfinance as yf
 from datetime import datetime
 import pandas_ta as ta
 import os
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 def get_indicators(symbol, start, end):
 
@@ -382,7 +382,7 @@ def ml_preprocessing(df):
 
 
     # Skalierung der Tabellen mit numerischen Werten (One-Hot Encoding nicht skalieren)
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
 
     X_train_scaled = X_train.copy()
     X_train_scaled[scale_columns] = scaler.fit_transform(X_train[scale_columns]) # auf Trainings-Daten Skalieren
