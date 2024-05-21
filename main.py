@@ -9,6 +9,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
 import joblib
+import numpy as np
 
 def prepare_stock_data(relevant_stocks):
     for symbol in relevant_stocks:
@@ -24,6 +25,14 @@ def train_and_evaluate_model(model, model_name, X_train, y_train, X_valid, y_val
     y_pred_train = model.predict(X_train)
     y_pred_valid = model.predict(X_valid)
     y_pred_test = model.predict(X_test)
+
+    # Write Predictions to CSV
+    y_pred_train_df = pd.DataFrame(y_pred_train)
+    y_pred_valid_df = pd.DataFrame(y_pred_valid)
+    y_pred_test_df = pd.DataFrame(y_pred_test)
+    y_pred_train_df.to_csv(f'data/{model_name}_y_pred_train.csv')
+    y_pred_valid_df.to_csv(f'data/{model_name}_y_pred_valid.csv')
+    y_pred_test_df.to_csv(f'data/{model_name}_y_pred_test.csv')
     
     print(f"{model_name} ----------------------------------------------------")
     mae_train = mean_absolute_error(y_train, y_pred_train)
@@ -35,19 +44,32 @@ def train_and_evaluate_model(model, model_name, X_train, y_train, X_valid, y_val
 
     return model, {'Model': model_name, 'MAE_train': mae_train, 'MAE_valid': mae_valid, 'MAE_test': mae_test}
 
-def save_shap_plots(model, X_train, model_name):
-    explainer = shap.Explainer(model, X_train)
-    shap_values = explainer(X_train)
+def save_shap_plots(model, X_train, model_name, feature_names=None):
+    # Use a subset of data for SHAP calculations to speed up the process
+    if model_name == "CNN":
+        X_train_sample = X_train.reshape(X_train.shape[0], -1)[:1000]  # Use first 1000 samples for CNN
+    else:
+        X_train_sample = X_train
 
-    print(f"SHAP summary plot for {model_name}")
-    shap.summary_plot(shap_values, X_train, show=False)
-    plt.savefig(f'plots/explainer/{model_name.lower()}_summary_plot.png', bbox_inches='tight')
-    plt.close()
+    explainer = shap.Explainer(model, X_train_sample)
+    shap_values = explainer(X_train_sample)
 
-    print(f"SHAP waterfall plot for a single prediction - {model_name}")
-    shap.waterfall_plot(shap_values[0], show=False)
-    plt.savefig(f'plots/explainer/{model_name.lower()}_waterfall_plot.png', bbox_inches='tight')
-    plt.close()
+    if model_name == "CNN":
+        print(f"SHAP summary plot for {model_name}")
+        shap.summary_plot(shap_values, X_train_sample, show=False, feature_names=feature_names)
+        plt.savefig(f'plots/explainer/{model_name.lower()}_summary_plot.png', bbox_inches='tight')
+        plt.close()
+
+    else:
+        print(f"SHAP summary plot for {model_name}")
+        shap.summary_plot(shap_values, X_train_sample, show=False)
+        plt.savefig(f'plots/explainer/{model_name.lower()}_summary_plot.png', bbox_inches='tight')
+        plt.close()
+
+        print(f"SHAP waterfall plot for a single prediction - {model_name}")
+        shap.waterfall_plot(shap_values[0], show=False)
+        plt.savefig(f'plots/explainer/{model_name.lower()}_waterfall_plot.png', bbox_inches='tight')
+        plt.close()
 
 def reshape_for_rnn(X):
     return X.to_numpy().reshape(X.shape[0], X.shape[1], 1)
@@ -81,39 +103,52 @@ def main():
     plot_data(df_train, df_valid, df_test, model.predict(X_train_scaled), model.predict(X_valid_scaled), model.predict(X_test_scaled), symbol='AAPL', model='XGBoost')
 
     # RNN
+    # X_train_np = reshape_for_rnn(X_train_scaled)
+    # X_valid_np = reshape_for_rnn(X_valid_scaled)
+    # X_test_np = reshape_for_rnn(X_test_scaled)
+
+    # rnn_model = RNNModel(X_train_scaled.shape[1])
+    # rnn_history = rnn_model.model.fit(X_train_np, y_train, epochs=1, batch_size=128, validation_data=(X_valid_np, y_valid))
+
+    # y_pred_train = rnn_model.model.predict(X_train_scaled)
+    # y_pred_valid = rnn_model.model.predict(X_valid_scaled)
+    # y_pred_test = rnn_model.model.predict(X_test_scaled)
+
+    # plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AAPL', model='RNN')
+    # plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='GOOGL', model='RNN')
+    # plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='MSFT', model='RNN')
+
+    # mae_train = mean_absolute_error(y_train, y_pred_train)
+    # mae_valid = mean_absolute_error(y_valid, y_pred_valid)
+    # mae_test = mean_absolute_error(y_test, y_pred_test)
+    
+    # save_shap_plots(rnn_model.model, X_train_np, "RNN")
+    # df = pd.concat([df, pd.DataFrame({'Model': ['RNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
+    # pd.DataFrame(rnn_history.history).to_csv('history_rnn.csv')
+
+    # rnn_history_df = pd.read_csv('history_rnn.csv')
+    # plot_model_history(rnn_history_df, "RNN")
+
+    # CNN
+
     X_train_np = reshape_for_rnn(X_train_scaled)
     X_valid_np = reshape_for_rnn(X_valid_scaled)
     X_test_np = reshape_for_rnn(X_test_scaled)
 
-    rnn_model = RNNModel(X_train_scaled.shape[1])
-    rnn_history = rnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=128, validation_data=(X_valid_np, y_valid))
-
-    y_pred_train = rnn_model.model.predict(X_train_scaled)
-    y_pred_valid = rnn_model.model.predict(X_valid_scaled)
-    y_pred_test = rnn_model.model.predict(X_test_scaled)
-
-    plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AAPL', model='RNN')
-    plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='GOOGL', model='RNN')
-    plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='MSFT', model='RNN')
-
-    mae_train = mean_absolute_error(y_train, y_pred_train)
-    mae_valid = mean_absolute_error(y_valid, y_pred_valid)
-    mae_test = mean_absolute_error(y_test, y_pred_test)
-    
-    save_shap_plots(rnn_model.model, X_train_np, "RNN")
-    df = pd.concat([df, pd.DataFrame({'Model': ['RNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
-    pd.DataFrame(rnn_history.history).to_csv('history_rnn.csv')
-
-    rnn_history_df = pd.read_csv('history_rnn.csv')
-    plot_model_history(rnn_history_df, "RNN")
-
-    # CNN
     cnn_model = CNNModel(X_train_scaled.shape[1])
-    cnn_history = cnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=128, validation_data=(X_valid_np, y_valid))
+    cnn_history = cnn_model.model.fit(X_train_np, y_train, epochs=100, batch_size=64, validation_data=(X_valid_np, y_valid))
 
     y_pred_train = cnn_model.model.predict(X_train_scaled)
     y_pred_valid = cnn_model.model.predict(X_valid_scaled)
     y_pred_test = cnn_model.model.predict(X_test_scaled)
+
+    # Write Predictions to CSV
+    y_pred_train_df = pd.DataFrame(y_pred_train)
+    y_pred_valid_df = pd.DataFrame(y_pred_valid)
+    y_pred_test_df = pd.DataFrame(y_pred_test)
+    y_pred_train_df.to_csv('data/CNN_y_pred_train.csv')
+    y_pred_valid_df.to_csv('data/CNN_y_pred_valid.csv')
+    y_pred_test_df.to_csv('data/CNN_y_pred_test.csv')
 
     plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='AAPL', model='CNN')
     plot_data(df_train, df_valid, df_test, y_pred_train, y_pred_valid, y_pred_test, symbol='GOOGL', model='CNN')
@@ -123,7 +158,7 @@ def main():
     mae_valid = mean_absolute_error(y_valid, y_pred_valid)
     mae_test = mean_absolute_error(y_test, y_pred_test)
     
-    save_shap_plots(cnn_model.model, X_train_np, "CNN")
+    save_shap_plots(cnn_model.model, X_train_np, "CNN", X_train_scaled.columns.tolist())
     
     df = pd.concat([df, pd.DataFrame({'Model': ['CNN'], 'MAE_train': [mae_train], 'MAE_valid': [mae_valid], 'MAE_test': [mae_test]})], ignore_index=True)
     pd.DataFrame(cnn_history.history).to_csv('history_cnn.csv')
@@ -154,7 +189,7 @@ def main():
     
     #Save RNN model
     
-    rnn_model.model.save('models/rnn_model.h5')
+    # rnn_model.model.save('models/rnn_model.h5')
     
     #Save CNN model
     
