@@ -181,3 +181,38 @@ fig.update_layout(
 
 # Save the plot as HTML file to display
 fig.write_html("plots/portfolio_vs_sp500.html")
+
+# Sharpe Ratio
+
+# Calculate mean and standard deviation of daily returns
+mean_daily_return = daily_account_change_df['Rel_change'].mean()
+std_daily_return = daily_account_change_df['Rel_change'].std()
+
+# Assuming a risk-free rate of 0 for simplicity
+risk_free_rate = 0.01
+
+# Calculate the Sharpe Ratio
+sharpe_ratio = (mean_daily_return - risk_free_rate) / std_daily_return
+print(f"Sharpe Ratio: {sharpe_ratio}")
+print(f"Mean Daily Return: {mean_daily_return}")
+print(f"Portfolio STD: {std_daily_return}")
+
+# Calculate daily returns
+daily_account_change_df['Daily_Return'] = daily_account_change_df['Account'].pct_change()
+
+# Remove the first row which will be NaN due to pct_change
+daily_account_change_df = daily_account_change_df.dropna(subset=['Daily_Return'])
+
+# Calculate the average daily return and standard deviation of daily returns
+average_daily_return = daily_account_change_df['Daily_Return'].mean()
+std_daily_return = daily_account_change_df['Daily_Return'].std()
+
+# Assume risk-free rate of 2% per annum
+risk_free_rate_annual = 0.02
+risk_free_rate_daily = risk_free_rate_annual / 252  # Assuming 252 trading days in a year
+
+# Calculate Sharpe ratio
+sharpe_ratio = (average_daily_return - risk_free_rate_daily) / std_daily_return
+annualised_sharpe_ratio = (252**0.5) * sharpe_ratio
+print(f"Daily Sharpe Ratio: {sharpe_ratio}")
+print(f"Annualised Sharpe Ratio: {annualised_sharpe_ratio}")
