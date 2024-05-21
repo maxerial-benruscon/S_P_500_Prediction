@@ -216,3 +216,7 @@ sharpe_ratio = (average_daily_return - risk_free_rate_daily) / std_daily_return
 annualised_sharpe_ratio = (252**0.5) * sharpe_ratio
 print(f"Daily Sharpe Ratio: {sharpe_ratio}")
 print(f"Annualised Sharpe Ratio: {annualised_sharpe_ratio}")
+
+
+# Which stocks were often traded?
+print(trades_df['Symbol'].value_counts())
