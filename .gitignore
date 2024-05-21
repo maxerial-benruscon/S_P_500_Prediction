@@ -5,5 +5,5 @@ final_data.csv
 *.html
 *.png
 data/stock_dataframes/
-
+training.ipynb
 data/ML_data/combined_dataframe.csv
