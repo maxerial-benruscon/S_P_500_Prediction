@@ -184,19 +184,6 @@ fig.write_html("plots/portfolio_vs_sp500.html")
 
 # Sharpe Ratio
 
-# Calculate mean and standard deviation of daily returns
-mean_daily_return = daily_account_change_df['Rel_change'].mean()
-std_daily_return = daily_account_change_df['Rel_change'].std()
-
-# Assuming a risk-free rate of 0 for simplicity
-risk_free_rate = 0.01
-
-# Calculate the Sharpe Ratio
-sharpe_ratio = (mean_daily_return - risk_free_rate) / std_daily_return
-print(f"Sharpe Ratio: {sharpe_ratio}")
-print(f"Mean Daily Return: {mean_daily_return}")
-print(f"Portfolio STD: {std_daily_return}")
-
 # Calculate daily returns
 daily_account_change_df['Daily_Return'] = daily_account_change_df['Account'].pct_change()
 
