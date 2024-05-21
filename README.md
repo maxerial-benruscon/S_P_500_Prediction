@@ -20,6 +20,7 @@ Python Version 3.11.9
 Verwendete Python Libraries:
 - yfinance
 - pandas
+- pandas-ta
 - sklearn
 - shap
 - xgboost
