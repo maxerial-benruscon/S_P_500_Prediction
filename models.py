@@ -21,14 +21,16 @@ class CNNModel:
     def __init__(self, shape):
         self.shape = shape
         self.model = self.build_model()
-        
+
     def build_model(self):
         model = Sequential()
+
         # Adding Conv1D layers
-        model.add(Conv1D(filters=128, kernel_size=3, activation='relu', input_shape=(self.shape, 1)))
+        model.add(Conv1D(filters=128, kernel_size=3, activation='relu', input_shape=(self.input_shape, 1)))
         model.add(BatchNormalization())
         model.add(MaxPooling1D(pool_size=2))
         model.add(Dropout(0.3))
+
         model.add(Conv1D(filters=256, kernel_size=3, activation='relu'))
         model.add(BatchNormalization())
         model.add(MaxPooling1D(pool_size=2))
@@ -37,7 +39,10 @@ class CNNModel:
         model.add(BatchNormalization())
         model.add(MaxPooling1D(pool_size=2))
         model.add(Dropout(0.3))
+
+        # Applying TimeDistributed Flatten layer
         model.add(TimeDistributed(Flatten()))
+
         # Adding LSTM layers
         model.add(LSTM(100, return_sequences=True))
         model.add(Dropout(0.5))
@@ -51,4 +56,5 @@ class CNNModel:
         model.add(Dense(1))
         # Compile the model
         model.compile(optimizer='adam', loss='mae', metrics=['mae'])
+
         return model
